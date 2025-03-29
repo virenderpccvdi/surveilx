@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+
+  backend-api:
+    image: surveilx/backend:latest
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/surveilx
+      - JWT_SECRET=change_this_secret
+    depends_on:
+      - db
+
+  frontend-dashboard:
+    image: surveilx/dashboard:latest
+    build: ./frontend
+    ports:
+      - "80:80"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: surveilx
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  ffmpeg-encoder:
+    image: surveilx/ffmpeg-av1:latest
+    build: ./ffmpeg
+    runtime: nvidia
+    volumes:
+      - ./recordings:/recordings
+
+  notification-service:
+    image: surveilx/notification:latest
+    build: ./notifications
+    environment:
+      TELEGRAM_TOKEN: ""
+      WHATSAPP_API_KEY: ""
+      SMTP_SERVER: ""
+      SMTP_PORT: ""
+
+volumes:
+  db-data:
